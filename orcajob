@@ -1,0 +1,216 @@
+#!/usr/bin/env python
+#wee python script to copy files in order to start orca jobs
+#for now this script requires a folder called 'available_jobs' in /home
+#this script will copy the relevant files from $HOME/available_jobs to the current folder
+#based on flags that this script will receive from the command line
+
+#jobs allready implemented:
+#OPT / FREQ / OPTFREQ / SP
+
+
+#jobs to be implemented:
+#OPT TDDFT / TDDFT
+#NEB
+#TS direct
+
+#future features:
+#adding custom lines for specific solvent and or time for the job
+
+
+#start of script
+print('Hellow! Welcome to andy\'s orcajob script')
+
+import sys
+import os
+import argparse
+
+
+#choosing defaults for functional/method and basis
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-m','--method', default='BP86', type=str, help='method for orca')
+parser.add_argument('-b','--basis', default='def2-SVP', type=str, help='method for orca')
+parser.add_argument('-s','--solvent', default='None', type=str, help='method for orca')
+parser.add_argument('-t','--time', default='short', type=str, help='method for orca')
+parser.add_argument('-n','--name', default='test', type=str, help='method for orca')
+parser.add_argument('-c','--cpus', default=24, type=int)
+parser.add_argument('-j', '--jobtype', default='SP', type=str, help='Jobtype for orca')
+parser.add_argument('-cm', '--cm', default='0 1', type=str, help='charge multiplicity when differnt from 0 1')
+parser.add_argument('-mem', '--memory', default='5GB', type=str, help='Memory used in the job')
+print('Going to make an orcajob with:')
+
+nm = parser.parse_args()
+#print(nm)
+
+method = nm.method
+basis = nm.basis
+solvent = nm.solvent
+time = nm.time
+name = nm.name
+cpus = nm.cpus
+jobtype = nm.jobtype
+c_m = nm.cm
+memory = nm.memory
+
+#here the correct flags for OPT/FREQ etc are going to be set 
+if jobtype == 'sp':
+    opt = False
+    freq = False
+    tddft = False
+    neb = False
+    new_job_tddft = False
+    scan = False
+
+elif jobtype =='freq':
+    opt = False
+    freq = True
+    tddft = False
+    neb = False
+    new_job_tddft = False
+    scan = False
+
+elif jobtype =='opt':
+    opt = True
+    freq = False
+    tddft = False
+    neb = False
+    new_job_tddft = False
+    scan = False
+
+
+elif jobtype =='optfreq':
+    opt = True
+    freq = True
+    tddft = False
+    neb = False
+    new_job_tddft = False
+    scan = False
+
+
+elif jobtype =='tddft':
+    opt = False
+    freq = False
+    tddft = True
+    neb = False
+    new_job_tddft = False
+    scan = False
+
+elif jobtype =='tddftopt':
+    opt = True
+    freq = False
+    tddft = True
+    neb = False
+    new_job_tddft = False
+    scan = False
+    #add IROOT flag for which one
+
+elif jobtype =='opttdft':
+    opt = True
+    freq = False
+    tddft = True
+    neb = False
+    new_job_tddft = True
+    scan = False
+
+
+elif jobtype =='nebtsfreq':
+    opt = False
+    freq = True
+    tddft = False
+    neb = True
+    new_job_tddft = False
+    scan = False
+
+
+elif jobtype =='scanopt':
+    opt = True
+    freq = False
+    tddft = False
+    neb = False
+    new_job_tddft = False
+    scan = True
+
+#here extra 
+
+
+
+os.system('touch orca.sh')
+os.system('touch job.inp')
+
+
+with open('orca.sh', 'w') as file:
+    file.write(f"#!/bin/bash\n")
+    file.write(f"#SBATCH --job-name={name}\n")
+    if time == 'veryshort':
+        file.write(f"#SBATCH --time=0-00:30:00\n")
+    elif time == 'short':
+        file.write(f'#SBATCH --time=0-12:00:00\n')
+    elif time == 'medium':
+        file.write(f'#SBATCH --time=3-00:00:00\n')
+    elif time == 'long':
+        file.write(f'#SBATCH --time=10-00:00:00\n')
+
+    file.write(f"#SBATCH --partition=regular\n")
+    file.write(f"#SBATCH --ntasks={cpus}\n")
+    file.write(f"#SBATCH --cpus-per-task=1\n")
+    file.write(f"#SBATCH --mem-per-cpu={memory}\n")
+    file.write(f"#SBATCH --nodes=1\n")
+    file.write("module purge\n")
+    file.write("module load ORCA/5.0.4-gompi-2022a\n")
+    file.write("$EBROOTORCA/bin/orca job.inp\n")
+
+with open('job.inp', 'w') as file:
+    file.write("#Script written by andy orca-job\n")
+    file.write(f"!{method} {basis}\n")
+
+    if solvent == 'None':
+        pass
+    else:
+        file.write(f"!cpcm({solvent})\n")
+    
+    if jobtype == 'optfreq':
+        file.write('!OPT FREQ\n')
+    if jobtype =='opt':
+        file.write('!OPT\n')
+    if jobtype =='freq':
+        file.write('!FREQ\n')
+    if jobtype =='neb':
+        file.write('!NEB-TS\n')
+        file.write('%neb \n')
+        file.write('  product \"end.xyz\"\n')
+        file.write('  TS \"TSg.xyz\"\n')
+        file.write('  preopt_ends TRUE \n')
+        file.write('end\n')
+
+    if jobtype == 'neb':
+        file.write('*xyzfile start.xyz {c_m}\n')
+    else:
+        file.write(f'*xyzfile struc.xyz {c_m}\n')
+    if jobtype == 'tddft':
+        file.write('!TDDFT\n')
+        file.write('%TDDFT\n')
+        file.write('  NROOTS 10\n')
+        file.write('  MAXDIM 5\n')
+        file.write('  tda FALSE\n')
+        file.write('end\n')
+    if jobtype == 'opttsfreq':
+        file.write('!OPTTS FREQ\n')
+        file.write('%geom\n')
+        file.write('  Calc_hess True\n')
+        file.write('  Recalc_hess 3\n')
+        file.write('end\n')
+    if jobtype == 'optts':
+        file.write('!OPTTS\n')
+        file.write('%geom\n')
+        file.write('  Calc_hess True\n')
+        file.write('  Recalc_hess 3\n')
+        file.write('end\n')
+
+
+    file.write(f'%pal nprocs {cpus} end\n')
+    file.write(f'%maxcore 4700\n')
+
+print('Done! Have a nice day!')
+
+
