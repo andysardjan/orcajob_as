@@ -53,83 +53,90 @@ jobtype = nm.jobtype
 c_m = nm.cm
 memory = nm.memory
 
+#add something here that will go through all the 
+
+#print('Choose method!')
+#print('Possible examples:')
+#print('BP86, B3LYP, CAM-B3LYP, WB97X-V')
+#method = input()
+
 #here the correct flags for OPT/FREQ etc are going to be set 
-if jobtype == 'sp':
-    opt = False
-    freq = False
-    tddft = False
-    neb = False
-    new_job_tddft = False
-    scan = False
-
-elif jobtype =='freq':
-    opt = False
-    freq = True
-    tddft = False
-    neb = False
-    new_job_tddft = False
-    scan = False
-
-elif jobtype =='opt':
-    opt = True
-    freq = False
-    tddft = False
-    neb = False
-    new_job_tddft = False
-    scan = False
-
-
-elif jobtype =='optfreq':
-    opt = True
-    freq = True
-    tddft = False
-    neb = False
-    new_job_tddft = False
-    scan = False
-
-
-elif jobtype =='tddft':
-    opt = False
-    freq = False
-    tddft = True
-    neb = False
-    new_job_tddft = False
-    scan = False
-
-elif jobtype =='tddftopt':
-    opt = True
-    freq = False
-    tddft = True
-    neb = False
-    new_job_tddft = False
-    scan = False
+#if jobtype == 'sp':
+#    opt = False
+#    freq = False
+#    tddft = False
+#    neb = False
+#    new_job_tddft = False
+#    scan = False
+#
+#elif jobtype =='freq':
+#    opt = False
+#    freq = True
+#    tddft = False
+#    neb = False
+#    new_job_tddft = False
+#    scan = False
+#
+#elif jobtype =='opt':
+#    opt = True
+#    freq = False
+#    tddft = False
+#    neb = False
+#    new_job_tddft = False
+#    scan = False
+#
+#
+#elif jobtype =='optfreq':
+#    opt = True
+#    freq = True
+#    tddft = False
+#    neb = False
+#    new_job_tddft = False
+#    scan = False
+#
+#
+#elif jobtype =='tddft':
+#    opt = False
+#    freq = False
+#    tddft = True
+#    neb = False
+#    new_job_tddft = False
+#    scan = False
+#
+#elif jobtype =='tddftopt':
+#    opt = True
+#    freq = False
+#    tddft = True
+#    neb = False
+#    new_job_tddft = False
+#    scan = False
     #add IROOT flag for which one
 
-elif jobtype =='opttdft':
-    opt = True
-    freq = False
-    tddft = True
-    neb = False
-    new_job_tddft = True
-    scan = False
+#elif jobtype =='opttdft':
+#    opt = True
+#    freq = False
+#    tddft = True
+#    neb = False
+#    new_job_tddft = True
+#    scan = False
 
 
-elif jobtype =='nebtsfreq':
-    opt = False
-    freq = True
-    tddft = False
-    neb = True
-    new_job_tddft = False
-    scan = False
-
-
-elif jobtype =='scanopt':
-    opt = True
-    freq = False
-    tddft = False
-    neb = False
-    new_job_tddft = False
-    scan = True
+#elif jobtype =='nebtsfreq':
+#    opt = False
+#    freq = True
+#    tddft = False
+#    neb = True
+#    new_job_tddft = False
+#    scan = False
+#
+#
+#elif jobtype =='scanopt':
+#    opt = True
+#    freq = False
+#    tddft = False
+#    neb = False
+#    new_job_tddft = False
+#    scan = True
 
 #here extra 
 
@@ -184,9 +191,9 @@ with open('job.inp', 'w') as file:
         file.write('end\n')
 
     if jobtype == 'neb':
-        file.write('*xyzfile start.xyz {c_m}\n')
+        file.write('*xyzfile {c_m} start.xyz\n')
     else:
-        file.write(f'*xyzfile struc.xyz {c_m}\n')
+        file.write(f'*xyzfile {c_m} struc.xyz\n')
     if jobtype == 'tddft':
         file.write('!TDDFT\n')
         file.write('%TDDFT\n')
